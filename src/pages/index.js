@@ -1,68 +1,66 @@
-import Head from 'next/head'
-import Image from 'next/image'
-import { Inter } from '@next/font/google'
-import { useEffect } from 'react'
-import axios from 'axios'
-import { useState } from 'react'
+import Head from "next/head";
+import Image from "next/image";
+import { Inter } from "@next/font/google";
+import { useEffect } from "react";
+import axios from "axios";
+import { useState } from "react";
 
-import Papa from 'papaparse'
+import Papa from "papaparse";
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ["latin"] });
 
 export default function Home() {
-
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
 
   const getLibVersion = async (lib) => {
-    return await axios
-      .get(`/api/getlatest/${lib}`,)
-      .then(res => res.data);
-  }
+    return await axios.get(`/api/getlatest/${lib}`).then((res) => res.data);
+  };
 
   const getLatestVersion = async (keys) => {
-
     const lib = keys;
 
-    return await Promise.all(lib.map(async (lib) => {
+    return await Promise.all(
+      lib.map(async (lib) => {
+        let pack = lib;
 
-      let pack = lib;
+        if (pack.includes("/")) {
+          pack = pack.replace("/", "|");
+        }
 
-      if (pack.includes("/")) {
-        pack = pack.replace("/", "|");
-      }
-
-      return await getLibVersion(pack);
-    }))
-  }
+        return await getLibVersion(pack);
+      })
+    );
+  };
 
   const handleDownload = () => {
-    
     if (!data) return;
 
     var dt = Papa.unparse(data);
 
-    var blob = dt.constructor !== Blob
-      ? new Blob([dt], { type: 'application/octet-stream' })
-      : dt;
+    var blob =
+      dt.constructor !== Blob
+        ? new Blob([dt], { type: "application/octet-stream" })
+        : dt;
 
     if (navigator.msSaveBlob) {
       navigator.msSaveBlob(blob, "package.csv");
       return;
     }
 
-    var lnk = document.createElement('a'),
+    var lnk = document.createElement("a"),
       url = window.URL,
       objectURL;
 
     lnk.download = "package.csv";
     lnk.href = objectURL = url.createObjectURL(blob);
-    lnk.dispatchEvent(new MouseEvent('click'));
+    lnk.dispatchEvent(new MouseEvent("click"));
     setTimeout(url.revokeObjectURL.bind(url, objectURL));
-  }
+  };
 
   const handleUpload = (e) => {
     setLoading(true);
+
     const file = e.target.files[0];
     const reader = new FileReader();
     reader.readAsText(file);
@@ -78,20 +76,18 @@ export default function Home() {
 
       var depArray = [];
 
-      depKeys.forEach(element => {
-
+      depKeys.forEach((element) => {
         depArray.push({
           package: element,
           current: dependencies[element],
-          latest: val.filter(x => x.package == element)[0].version
+          latest: val.filter((x) => x.package == element)[0].version,
         });
-
       });
-      setLoading(false)
+
+      setLoading(false);
       setData(depArray);
-      Papa.unparse(depArray)
-    }
-  }
+    };
+  };
 
   return (
     <>
@@ -104,36 +100,57 @@ export default function Home() {
 
       <main className="grid min-h-full place-items-center bg-white py-24 px-6 sm:py-32 lg:px-8">
         <div className="text-center">
-          <p className="text-base font-semibold text-indigo-600">Is My Packages Latest?</p>
-          <h1 className="mt-4 text-base tracking-tight text-gray-900">
-            {
-              loading && <div>Loading...</div>
-            }
-            {
-              data.map((item, index) => {
-                return <div key={index}>
+          <p className="text-4xl font-semibold text-indigo-600">
+            Is My Packages Latest?
+          </p>
 
-                  <div className='flex'>
-                    <div className='mr-5'>{item.package}:</div>
-                    <div>{item.current}</div>
-                    <div className='mx-3'> {"  →  "} </div>
-                    <div>{item.latest}</div>
-                  </div>
-                </div>
-              })
-            }
-
-            {
-              data.length > 0 && <button className='mt-10 bg-indigo-500 text-white' onClick={handleDownload}>Download</button>
-            }
-          </h1>
           <div className="mt-6 text-base leading-7 text-gray-600">
             <h1>Import Package.json</h1>
             <input type="file" onChange={handleUpload} />
           </div>
 
+          <div className="mt-4 text-base tracking-tight text-gray-900">
+            {data.length > 0 && (
+              <button
+                className="mt-10 bg-indigo-500 text-white px-4 py-2 rounded"
+                onClick={handleDownload}
+              >
+                Download
+              </button>
+            )}
+
+            {loading && <div>Loading...</div>}
+
+            {data.length > 0 && (
+              <table className="table-auto">
+                <thead>
+                  <tr>
+                    <th className="px-4 py-2">Package</th>
+                    <th className="px-4 py-2">Current</th>
+                    <th className="px-4 py-2">Latest</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.map((x, index) => (
+                    <tr key={index}>
+                      <td className="border px-4 py-2">{x.package}</td>
+                      <td
+                        className={`border px-4 py-2 ${
+                          x.current.replace("^", "") !== x.latest &&
+                          "text-red-500"
+                        }`}
+                      >
+                        {x.current}
+                      </td>
+                      <td className="border px-4 py-2">{x.latest}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+          </div>
         </div>
       </main>
     </>
-  )
+  );
 }
