@@ -6,6 +6,10 @@ import axios from "axios";
 import { useState } from "react";
 
 import Papa from "papaparse";
+import dayjs from "dayjs";
+var customParseFormat = require('dayjs/plugin/customParseFormat');
+
+dayjs.extend(customParseFormat)
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -74,9 +78,6 @@ export default function Home() {
 
       let val = await getLatestVersion(depKeys);
 
-
-      console.log("==val",val)
-
       var depArray = [];
 
       depKeys.forEach((element) => {
@@ -84,6 +85,8 @@ export default function Home() {
           package: element,
           current: dependencies[element],
           latest: val.filter((x) => x.package == element)[0].version,
+          release: val.filter((x) => x.package == element)[0].release,
+          url: val.filter((x) => x.package == element)[0].url,
         });
       });
 
@@ -106,6 +109,7 @@ export default function Home() {
           <p className="text-4xl font-semibold text-indigo-600">
             Is My Packages Latest?
           </p>
+
 
           <div className="mt-6 text-base leading-7 text-gray-600">
             <h1>Import Package.json</h1>
@@ -131,6 +135,8 @@ export default function Home() {
                     <th className="px-4 py-2">Package</th>
                     <th className="px-4 py-2">Current</th>
                     <th className="px-4 py-2">Latest</th>
+                    <th className="px-4 py-2">Release date</th>
+                    <th className="px-4 py-2">Url</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -138,14 +144,19 @@ export default function Home() {
                     <tr key={index}>
                       <td className="border px-4 py-2">{x.package}</td>
                       <td
-                        className={`border px-4 py-2 ${
-                          x.current.replace("^", "") !== x.latest &&
+                        className={`border px-4 py-2 ${x.current.replace("^", "") !== x.latest &&
                           "text-red-500"
-                        }`}
+                          }`}
                       >
                         {x.current}
                       </td>
                       <td className="border px-4 py-2">{x.latest}</td>
+                      <td className="border px-4 py-2">{
+                        x.release ? dayjs(x.release, "YYYY-MM-DD").format("DD MMM YYYY") : "-"
+                      }</td>
+                      <td className="border px-4 py-2">
+                        <a href={x.url} target={"_blank"} rel={"noreferrer"}>{x.url}</a>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

@@ -1,13 +1,8 @@
 import axios from 'axios';
+import { Octokit } from 'octokit';
 
 export default function handler(req, res) {
     const { pid } = req.query
-    console.log("reqqqq", pid);
-
-    // const { title, post } = JSON.parse(req.body);
-
-
-    //check if pid has | and replace it with /
 
     let lib = pid;
 
@@ -27,45 +22,44 @@ export default function handler(req, res) {
 
     // let github = `https://api.github.com/repos/${owner}/${repo}/releases/tags/v${version}`
 
-    
+
     axios(options)
         .then((response) => {
 
             var data = response.data;
-            // res.status(200).json({
-            //     package: pid.replace("|", "/"),
-            //     version: response.data.version
-            // });
-
             let owner = response.data.repository.url.split("/")[3];
             let repo = response.data.repository.url.split("/")[4].replace(".git", "");
 
-            const options = {
-                method: 'GET',
+            const octokit = new Octokit({
+                auth: process.env.NEXT_PUBLIC_GITHUB_KEY,
+            })
+
+            octokit.request('GET /repos/{owner}/{repo}/releases/latest', {
+                owner: owner,
+                repo: repo,
                 headers: {
-                    'Content-Type': 'application/json',
-                    "auth": process.env.NEXT_PUBLIC_GITHUB_KEY,
-                },
-                url: `https://api.github.com/repos/${owner}/${repo}/releases/tags/v${response.data.version}`,
-            };
+                    'X-GitHub-Api-Version': '2022-11-28'
+                }
+            }).then((github) => {
+                const published = github.data.published_at;
 
-            axios(options)
-                .then((github) => {
-
-                    res.status(200).json({
-                        package: packageName,
-                        version: data.version,
-                        release: github.data.published_at
-                    });
-
-                })
-                .catch((error) => {
-                    res.status(200).json({
-                        package: packageName,
-                        version: data.version,
-                        release: null
-                    });
+                res.status(200).json({
+                    package: packageName,
+                    version: data.version,
+                    release: published,
+                    url: data.repository.url.replace(".git", "").replace("git+", "").replace("git://", "https://")
                 });
+
+            }).catch((error) => {
+
+                res.status(200).json({
+                    package: packageName,
+                    version: data.version,
+                    release: null,
+                    url: data.repository.url.replace(".git", "").replace("git+", "").replace("git://", "https://")
+                });
+            });
+
         })
         .catch((error) => {
             res.status(200).json({
