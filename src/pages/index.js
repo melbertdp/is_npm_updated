@@ -76,6 +76,9 @@ export default function Home() {
 
       let val = await getLatestVersion(depKeys);
 
+
+      console.log("==val",val)
+
       var depArray = [];
 
       depKeys.forEach(element => {

@@ -23,45 +23,56 @@ export default function handler(req, res) {
         url: 'https://registry.npmjs.org/' + lib + '/latest',
     };
 
+    let packageName = pid.replace("|", "/");
 
     // let github = `https://api.github.com/repos/${owner}/${repo}/releases/tags/v${version}`
 
-
+    
     axios(options)
         .then((response) => {
 
-            res.status(200).json({
-                package: pid.replace("|", "/"),
-                version: response.data.version
-            });
+            var data = response.data;
+            // res.status(200).json({
+            //     package: pid.replace("|", "/"),
+            //     version: response.data.version
+            // });
 
-            // let owner = response.data.repository.url.split("/")[3];
-            // let repo = response.data.repository.url.split("/")[4].replace(".git", "");
+            let owner = response.data.repository.url.split("/")[3];
+            let repo = response.data.repository.url.split("/")[4].replace(".git", "");
 
-            // const options = {
-            //     method: 'GET',
-            //     headers: {
-            //         'Content-Type': 'application/json',
-            //     },
-            //     url: `https://api.github.com/repos/${owner}/${repo}/releases/tags/v${response.data.version}`,
-            // };
+            const options = {
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                    "auth": process.env.NEXT_PUBLIC_GITHUB_KEY,
+                },
+                url: `https://api.github.com/repos/${owner}/${repo}/releases/tags/v${response.data.version}`,
+            };
 
-            // axios(options)
-            //     .then((github) => {
+            axios(options)
+                .then((github) => {
 
-            //         res.status(200).json({
-            //             package: pid,
-            //             version: response.data.version,
-            //             release: github.data.published_at
-            //         });
+                    res.status(200).json({
+                        package: packageName,
+                        version: data.version,
+                        release: github.data.published_at
+                    });
 
-            //     })
-            //     .catch((error) => {
-            //         res.status(500).json(error);
-            //     });
+                })
+                .catch((error) => {
+                    res.status(200).json({
+                        package: packageName,
+                        version: data.version,
+                        release: null
+                    });
+                });
         })
         .catch((error) => {
-            res.status(500).json(error);
+            res.status(200).json({
+                package: packageName,
+                version: data.version,
+                release: null
+            });
         });
 
 
