@@ -5,6 +5,8 @@ import { useEffect } from 'react'
 import axios from 'axios'
 import { useState } from 'react'
 
+import Papa from 'papaparse'
+
 const inter = Inter({ subsets: ['latin'] })
 
 export default function Home() {
@@ -32,6 +34,31 @@ export default function Home() {
 
       return await getLibVersion(pack);
     }))
+  }
+
+  const handleDownload = () => {
+    
+    if (!data) return;
+
+    var dt = Papa.unparse(data);
+
+    var blob = dt.constructor !== Blob
+      ? new Blob([dt], { type: 'application/octet-stream' })
+      : dt;
+
+    if (navigator.msSaveBlob) {
+      navigator.msSaveBlob(blob, "package.csv");
+      return;
+    }
+
+    var lnk = document.createElement('a'),
+      url = window.URL,
+      objectURL;
+
+    lnk.download = "package.csv";
+    lnk.href = objectURL = url.createObjectURL(blob);
+    lnk.dispatchEvent(new MouseEvent('click'));
+    setTimeout(url.revokeObjectURL.bind(url, objectURL));
   }
 
   const handleUpload = (e) => {
@@ -62,6 +89,7 @@ export default function Home() {
       });
       setLoading(false)
       setData(depArray);
+      Papa.unparse(depArray)
     }
   }
 
@@ -93,6 +121,10 @@ export default function Home() {
                   </div>
                 </div>
               })
+            }
+
+            {
+              data.length > 0 && <button className='mt-10 bg-indigo-500 text-white' onClick={handleDownload}>Download</button>
             }
           </h1>
           <div className="mt-6 text-base leading-7 text-gray-600">
