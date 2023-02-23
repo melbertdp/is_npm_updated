@@ -104,32 +104,31 @@ export default function Home() {
         <link rel="icon" href="/favicon.ico" />
       </Head>
 
-      <main className="grid min-h-full place-items-center bg-white py-24 px-6 sm:py-32 lg:px-8">
-        <div className="text-center">
-          <p className="text-4xl font-semibold text-indigo-600">
+      <main className="grid min-h-full place-items-center py-24 px-6 sm:py-32 lg:px-8 text-white">
+        <div className="text-center ">
+          <p className="inline bg-gradient-to-r from-indigo-200 via-sky-400 to-indigo-200 bg-clip-text font-display text-5xl tracking-tight text-transparent">
             Is My Packages Latest?
           </p>
 
-
-          <div className="mt-6 text-base leading-7 text-gray-600">
+          <div className="mt-6 text-base leading-7 text-white">
             <h1>Import Package.json</h1>
-            <input type="file" onChange={handleUpload} />
+            <input disabled={loading && true} type="file" onChange={handleUpload} />
           </div>
 
-          <div className="mt-4 text-base tracking-tight text-gray-900">
+          <div className="my-4 text-base tracking-tight text-white-900">
             {data.length > 0 && (
               <button
                 className="mt-10 bg-indigo-500 text-white px-4 py-2 rounded"
                 onClick={handleDownload}
               >
-                Download
+                Download Report
               </button>
             )}
 
-            {loading && <div>Loading...</div>}
+            {loading && <div className="text-white">Loading...</div>}
 
             {data.length > 0 && (
-              <table className="table-auto">
+              <table className="table-auto text-white">
                 <thead>
                   <tr>
                     <th className="px-4 py-2">Package</th>
